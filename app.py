@@ -2,60 +2,38 @@ import streamlit as st
 import pickle
 import pandas as pd
 
+st.set_page_config(page_title="Movie Recommender", layout="wide")
+
 st.markdown(
-    f"""
+    """
     <style>
-    .stApp {{
-        background-image: url("https://cdn.mos.cms.futurecdn.net/rDJegQJaCyGaYysj2g5XWY.jpg");
+    .stApp {
+        background-image: url("https://analyticsindiamag.com/wp-content/uploads/2019/05/apps.55787.9007199266246365.687a10a8-4c4a-4a47-8ec5-a95f70d8852d.jpg");
         background-size: cover;
         background-repeat: no-repeat;
         background-attachment: fixed;
-    }}
+    }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-st.markdown("""
-    <style>
-    div.stButton > button {
-        background-color: #FF0000;
-        color: Black;
-        border: none;
-        padding: 0.5em 1em;
-        font-size: 16px;
-        border-radius: 8px;
-    }
+movies = pickle.load(open('movies.pkl', 'rb'))
+similarity = pickle.load(open('similarity.pkl', 'rb'))
 
-    div.stButton > button:hover {
-        background-color: #45a049;
-        color: white;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+st.title("🎬 Movie Recommender System")
+st.write("Get movie recommendations based on your favorite movie.")
 
-def recommend (movie):
+def recommend(movie):
     movie_index = movies[movies['title'] == movie].index[0]
     distances = similarity[movie_index]
-    movies_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x:[1])[1:6]
+    movie_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
+    return [movies.iloc[i[0]].title for i in movie_list]
 
-    recommended_movies = []
-    for i in movies_list:
-        recommended_movies.append(movies.iloc[i[0]].title)
-    return recommended_movies
+selected_movie_name = st.selectbox("Select a movie you like:", movies['title'].values)
 
-movies_dict = pickle.load(open('movie_dict.pkl','rb'))
-movies = pd.DataFrame(movies_dict)
-
-similarity = pickle.load(open('similarity.pkl','rb'))
-
-st.title('Movie Recommender System')
-
-selected_movie_name = st.selectbox(
-'What movie would you like us to recommend to you?',
-movies['title'].values)
-
-if st.button('Recommend'):
+if st.button("Recommend"):
     recommendations = recommend(selected_movie_name)
-    for i in recommendations:
-        st.write(i)
+    st.write("### Recommended Movies:")
+    for i, rec in enumerate(recommendations, start=1):
+        st.write(f"{i}. {rec}")
